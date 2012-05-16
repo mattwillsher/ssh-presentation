@@ -1,0 +1,218 @@
+#!/bin/bash
+
+
+COLUMNS=$( stty size | cut -d\  -f2 )
+ROWS=$( stty size | cut -d\  -f1 )
+
+mode=0
+function centre()
+{
+     value="$1" 
+     width=$(( (  $COLUMNS - ${#value} ) / 2 ))
+     width=$(( $width + ${#value} ))
+     printf "%${width}s\n" "$*"
+}
+function pause()
+{
+    echo -n .
+    read
+}
+
+function bold { mode=1; }
+function norm { mode=0; }
+function red { printf "\033[$mode;31;0m"; }
+function green { printf "\033[$mode;32;0m"; }
+function blue { printf "\033[$mode;33;0m"; }
+function normal { printf "\033[0m"; norm; }
+function eos { printf '\n\n~~>'; }
+function next { eos; read; clear; printf "\n"; } 
+function title { centre "$*"; normal; }
+function nb { bold; centre "$*"; normal; }
+function text { printf '     %s\n' "$*"; }
+
+TARGET_HOSTNAME="texas"
+TARGET_USER="bob"
+
+
+centre "Press ENTER to start"
+next
+title Introduction to SSH
+next
+title Topics
+echo
+text -  Basic usage
+pause
+text -  SSH Keys
+pause
+text -  The SSH Agent
+pause
+text -  Tunnels
+next
+title The server
+echo
+text Package is called sshd or openssh-server. Usually installed by default.
+pause
+text Process is sshd
+pause
+text Default port is TCP 22
+pause
+text No connection? Check your host\'s firewall
+next
+title Command line usage
+pause 
+text If your username is the same in both places:
+text '    $ ssh <hostname>'
+pause
+text If not
+text '    $ ssh <remoteusername>@<hostname>'
+text or
+text '    $ ssh -l <remoteusername> <hostname>'
+text
+text If you\'ve never connected before...
+pause
+set -x
+ssh $TARGET_HOSTNAME uname -a 
+set +x
+next
+title What was all that about?
+pause
+text SSH uses public key cryptography
+pause
+text Each server has a private key which unlocks data
+text and a public key which locks data
+pause
+text What is important is the private key stays private
+text The public key is used to verify the right private key is in use
+next
+set -x
+ssh $TARGET_HOSTNAME uname -a
+set +x
+next
+title To reiterate
+pause
+nb The private key stays private!
+next
+title Uses of the public key
+pause
+text Checks the remote host is what it says it is which
+pause
+text helps prevents man-in-the-middle attacks
+pause 
+text The ssh client will warn and usually stop you connecting
+text if the remote host private key has changed.
+pause
+text Take note of these warnings
+next
+title User SSH keys
+pause
+text Users can have SSH keys too
+pause
+text Provides stronger authentication
+pause
+text Of the three factors of strong authenication this gives:
+pause
+text - something you have \(the private key file\)
+pause
+text - something you know \(the key file\'s strong passphrase\)
+pause
+text The passphrase is optional, but should be used
+next
+title Generating a user SSH key
+pause
+set -x
+ssh-keygen
+set +x
+next
+title Copying the ssh keys
+pause
+set -x
+scp .ssh/id_rsa.pub $TARGET_HOSTNAME:
+ssh $TARGET_HOSTNAME
+sleep 2
+ssh $TARGET_HOSTNAME uname -a
+set +x
+pause
+text That\'s nice and all but now I have a file to manage and
+text a passphrase to enter when I connect.
+next
+title The SSH Agent
+pause
+text The SSH agent stores the sshkey in memory for the duration of your session
+pause
+text Enter your password once
+pause
+text Forward the agent connect to allow hopping from server
+text to server from the on key on your workstation
+next
+title Using the ssh-agent
+pause
+text On Mac and Linux this should just work on a GUI session.
+text On Windows you can use Pageant with PuTTY.
+pause
+text ssh-add will add your key the the ssh-agent
+pause
+set -x
+eval $( ssh-agent )
+ssh-add
+set +x
+pause
+text ssh-add -l shows what keys you currently have
+set -x
+ssh-add -l
+set +x
+text Other options to remove key, lock the agent etc
+text see ssh-add -h
+next
+title Using the ssh-agent
+sleep 3
+set -x
+ssh-add -l 
+pause
+ssh $TARGET_HOSTNAME uname -a
+set +x
+pause
+text To forward the agent connection usage -A
+next
+title Easier ssh key copying
+pause
+set -x
+ssh-copy-id $TARGET_HOSTNAME
+sleep 3 
+ssh $TARGET_HOSTNAME uname -a
+set +x
+next
+title SSH config file
+pause
+text \$HOME/.ssh/config can set per host and global options
+pause
+text see man ssh_config
+next
+title Tunnels
+pause
+text SSH allows transmission of arbitrary data, not just terminal sessions
+pause
+text A local tunnel forwards a connection from the local machine to
+text A destination a the remote end
+pause
+text This can be used to bypass firewall rules, gain access to services
+text listening on the loopback device at the remote end
+pause
+text A demonstation...
+next
+title More tunnel
+pause
+text Other options include forward from the remote end to the local side
+pause
+text Acting as a SOCKS proxy
+pause
+text Full TCP/IP via tun devices in more recent versions
+pause
+text Use responsibly!
+next
+title Q \& A
+next
+next
+next
+echo Fin
+
+
