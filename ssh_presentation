@@ -1,4 +1,7 @@
 #!/bin/bash
+# Author: Matt Willsher <matt@monki.org.uk>
+# https://github.com/mattwillsh/ssh-presentation
+
 
 
 COLUMNS=$( stty size | cut -d\  -f2 )
@@ -30,9 +33,9 @@ function title { centre "$*"; normal; }
 function nb { bold; centre "$*"; normal; }
 function text { printf '     %s\n' "$*"; }
 
+# Destination host to run the commands against. Needs to
+# have a user with the same login as your local user.
 TARGET_HOSTNAME="texas"
-TARGET_USER="bob"
-
 
 centre "Press ENTER to start"
 next
